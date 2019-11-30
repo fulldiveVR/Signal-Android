@@ -28,6 +28,11 @@ apply plugin: 'witness'
 apply from: 'translations.gradle'
 apply from: 'witness-verifications.gradle'
 
+// Load keystore properties
+def keystorePropertiesFile = file("../keys/keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 repositories {
     maven {
         url "https://raw.github.com/signalapp/maven/master/photoview/releases/"
@@ -63,6 +68,7 @@ repositories {
     mavenCentral()
     jcenter()
     mavenLocal()
+    maven { url "http://office.fulldive.com:8083" }
 }
 
 protobuf {
@@ -166,6 +172,8 @@ dependencies {
         exclude group: 'org.freemarker'
     }
 
+    implementation "com.fulldive:eventsender:0.1.6"
+
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.assertj:assertj-core:3.11.1'
     testImplementation 'org.mockito:mockito-core:1.9.5'
@@ -206,7 +214,7 @@ def abiPostFix = ['universal'   : 0,
 
 android {
     flavorDimensions "none"
-    compileSdkVersion 28
+    compileSdkVersion 29
     buildToolsVersion '28.0.3'
     useLibrary 'org.apache.http.legacy'
 
@@ -215,15 +223,16 @@ android {
     }
 
     defaultConfig {
+        applicationId "com.fulldive.cashchat"
         versionCode canonicalVersionCode * postFixSize
         versionName canonicalVersionName
 
         minSdkVersion 19
-        targetSdkVersion 28
+        targetSdkVersion 29
         multiDexEnabled true
 
         vectorDrawables.useSupportLibrary = true
-        project.ext.set("archivesBaseName", "Signal");
+        project.ext.set("archivesBaseName", "Signal")
 
         buildConfigField "long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L"
         buildConfigField "String", "SIGNAL_URL", "\"https://textsecure-service.whispersystems.org\""
@@ -252,6 +261,15 @@ android {
                 include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
                 universalApk true
             }
+        }
+    }
+
+    signingConfigs {
+        releaseConfig {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
         }
     }
 
@@ -307,6 +325,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles = buildTypes.debug.proguardFiles
+            signingConfig signingConfigs.releaseConfig
         }
     }
 

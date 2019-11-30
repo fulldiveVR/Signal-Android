@@ -30,6 +30,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.multidex.MultiDexApplication;
 
+import com.fulldive.eventsender.lib.EventSender;
 import com.google.android.gms.security.ProviderInstaller;
 
 import org.conscrypt.Conscrypt;
@@ -135,6 +136,8 @@ public class ApplicationContext extends MultiDexApplication implements DefaultLi
     }
 
     ApplicationDependencies.getJobManager().beginJobLoop();
+
+    EventSender.getInstance(this);  // initialize
   }
 
   @Override
